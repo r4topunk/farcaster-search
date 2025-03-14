@@ -20,6 +20,19 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Environment Setup
+
+Before running the application, you need to set up your environment variables:
+
+1. Create a `.env.local` file in the root of the project
+2. Add your Neynar API key:
+   ```
+   NEYNAR_API_KEY=your_neynar_api_key_here
+   ```
+3. Restart your development server if it's already running
+
+The Neynar API key is now securely stored in environment variables and not exposed to the client-side code.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

@@ -1,104 +1,111 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Search, Calendar, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar as CalendarComponent } from "@/components/ui/calendar"
-import { format } from "date-fns"
-import { CastResults } from "@/components/cast-results"
-import { ApiKeyInput } from "@/components/api-key-input"
+import { useState } from "react";
+import { Search, Calendar, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { CastResults } from "@/components/cast-results";
 
 export function FarcasterSearch() {
-  const [apiKey, setApiKey] = useState<string>("")
-  const [query, setQuery] = useState<string>("")
-  const [mode, setMode] = useState<string>("literal")
-  const [sortType, setSortType] = useState<string>("desc_chron")
-  const [limit, setLimit] = useState<string>("25")
-  const [priorityMode, setPriorityMode] = useState<boolean>(false)
-  const [authorFid, setAuthorFid] = useState<string>("")
-  const [viewerFid, setViewerFid] = useState<string>("")
-  const [channelId, setChannelId] = useState<string>("")
-  const [parentUrl, setParentUrl] = useState<string>("")
-  const [dateRange, setDateRange] = useState<{ before?: Date; after?: Date }>({})
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [results, setResults] = useState<any>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [query, setQuery] = useState<string>("");
+  const [mode, setMode] = useState<string>("literal");
+  const [sortType, setSortType] = useState<string>("desc_chron");
+  const [limit, setLimit] = useState<string>("25");
+  const [priorityMode, setPriorityMode] = useState<boolean>(false);
+  const [authorFid, setAuthorFid] = useState<string>("");
+  const [viewerFid, setViewerFid] = useState<string>("");
+  const [channelId, setChannelId] = useState<string>("");
+  const [parentUrl, setParentUrl] = useState<string>("");
+  const [dateRange, setDateRange] = useState<{ before?: Date; after?: Date }>(
+    {}
+  );
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [results, setResults] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSearch = async () => {
-    if (!apiKey) {
-      setError("Please enter your API key")
-      return
-    }
-
     if (!query) {
-      setError("Please enter a search query")
-      return
+      setError("Please enter a search query");
+      return;
     }
 
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
-    let searchQuery = query
+    let searchQuery = query;
 
     // Add date filters to query if selected
     if (dateRange.before) {
-      searchQuery += ` before:${format(dateRange.before, "yyyy-MM-dd")}`
+      searchQuery += ` before:${format(dateRange.before, "yyyy-MM-dd")}`;
     }
     if (dateRange.after) {
-      searchQuery += ` after:${format(dateRange.after, "yyyy-MM-dd")}`
+      searchQuery += ` after:${format(dateRange.after, "yyyy-MM-dd")}`;
     }
 
     // Build URL with query parameters
-    const params = new URLSearchParams()
-    params.append("q", searchQuery)
-    params.append("mode", mode)
-    params.append("sort_type", sortType)
-    params.append("limit", limit)
-    params.append("priority_mode", priorityMode.toString())
+    const params = new URLSearchParams();
+    params.append("q", searchQuery);
+    params.append("mode", mode);
+    params.append("sort_type", sortType);
+    params.append("limit", limit);
+    params.append("priority_mode", priorityMode.toString());
 
-    if (authorFid) params.append("author_fid", authorFid)
-    if (viewerFid) params.append("viewer_fid", viewerFid)
-    if (channelId) params.append("channel_id", channelId)
-    if (parentUrl) params.append("parent_url", parentUrl)
+    if (authorFid) params.append("author_fid", authorFid);
+    if (viewerFid) params.append("viewer_fid", viewerFid);
+    if (channelId) params.append("channel_id", channelId);
+    if (parentUrl) params.append("parent_url", parentUrl);
 
     try {
-      const response = await fetch(`https://api.neynar.com/v2/farcaster/cast/search?${params.toString()}`, {
-        method: "GET",
-        headers: {
-          accept: "application/json",
-          "x-api-key": apiKey,
-        },
-      })
+      // Use our internal API route instead of calling Neynar directly
+      const response = await fetch(`/api/search?${params.toString()}`);
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || "Failed to fetch results")
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch results");
       }
 
-      const data = await response.json()
-      setResults(data)
+      const data = await response.json();
+      setResults(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
-      <ApiKeyInput apiKey={apiKey} setApiKey={setApiKey} />
-
       <Card className="mt-6">
         <CardHeader>
           <CardTitle>Search Farcaster</CardTitle>
-          <CardDescription>Search for casts using keywords and filters</CardDescription>
+          <CardDescription>
+            Search for casts using keywords and filters
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="basic" className="w-full">
@@ -133,8 +140,12 @@ export function FarcasterSearch() {
                       <SelectValue placeholder="Select mode" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="literal">Literal (exact words)</SelectItem>
-                      <SelectItem value="semantic">Semantic (meaning)</SelectItem>
+                      <SelectItem value="literal">
+                        Literal (exact words)
+                      </SelectItem>
+                      <SelectItem value="semantic">
+                        Semantic (meaning)
+                      </SelectItem>
                       <SelectItem value="hybrid">Hybrid (both)</SelectItem>
                     </SelectContent>
                   </Select>
@@ -148,7 +159,9 @@ export function FarcasterSearch() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="desc_chron">Newest First</SelectItem>
-                      <SelectItem value="algorithmic">Engagement & Time</SelectItem>
+                      <SelectItem value="algorithmic">
+                        Engagement & Time
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -171,7 +184,11 @@ export function FarcasterSearch() {
                 </div>
 
                 <div className="flex items-center space-x-2 pt-8">
-                  <Switch id="priority-mode" checked={priorityMode} onCheckedChange={setPriorityMode} />
+                  <Switch
+                    id="priority-mode"
+                    checked={priorityMode}
+                    onCheckedChange={setPriorityMode}
+                  />
                   <Label htmlFor="priority-mode">Priority Mode</Label>
                 </div>
               </div>
@@ -182,7 +199,11 @@ export function FarcasterSearch() {
                     Before Date
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" size="icon" className="h-5 w-5">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-5 w-5"
+                        >
                           <Calendar className="h-3 w-3" />
                         </Button>
                       </PopoverTrigger>
@@ -190,7 +211,12 @@ export function FarcasterSearch() {
                         <CalendarComponent
                           mode="single"
                           selected={dateRange.before}
-                          onSelect={(date) => setDateRange({ ...dateRange, before: date || undefined })}
+                          onSelect={(date) =>
+                            setDateRange({
+                              ...dateRange,
+                              before: date || undefined,
+                            })
+                          }
                           initialFocus
                         />
                       </PopoverContent>
@@ -198,7 +224,11 @@ export function FarcasterSearch() {
                   </Label>
                   <div className="flex items-center gap-2">
                     <Input
-                      value={dateRange.before ? format(dateRange.before, "yyyy-MM-dd") : ""}
+                      value={
+                        dateRange.before
+                          ? format(dateRange.before, "yyyy-MM-dd")
+                          : ""
+                      }
                       readOnly
                       placeholder="Select date..."
                     />
@@ -206,7 +236,9 @@ export function FarcasterSearch() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => setDateRange({ ...dateRange, before: undefined })}
+                        onClick={() =>
+                          setDateRange({ ...dateRange, before: undefined })
+                        }
                       >
                         ×
                       </Button>
@@ -219,7 +251,11 @@ export function FarcasterSearch() {
                     After Date
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" size="icon" className="h-5 w-5">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-5 w-5"
+                        >
                           <Calendar className="h-3 w-3" />
                         </Button>
                       </PopoverTrigger>
@@ -227,7 +263,12 @@ export function FarcasterSearch() {
                         <CalendarComponent
                           mode="single"
                           selected={dateRange.after}
-                          onSelect={(date) => setDateRange({ ...dateRange, after: date || undefined })}
+                          onSelect={(date) =>
+                            setDateRange({
+                              ...dateRange,
+                              after: date || undefined,
+                            })
+                          }
                           initialFocus
                         />
                       </PopoverContent>
@@ -235,7 +276,11 @@ export function FarcasterSearch() {
                   </Label>
                   <div className="flex items-center gap-2">
                     <Input
-                      value={dateRange.after ? format(dateRange.after, "yyyy-MM-dd") : ""}
+                      value={
+                        dateRange.after
+                          ? format(dateRange.after, "yyyy-MM-dd")
+                          : ""
+                      }
                       readOnly
                       placeholder="Select date..."
                     />
@@ -243,7 +288,9 @@ export function FarcasterSearch() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => setDateRange({ ...dateRange, after: undefined })}
+                        onClick={() =>
+                          setDateRange({ ...dateRange, after: undefined })
+                        }
                       >
                         ×
                       </Button>
@@ -308,16 +355,16 @@ export function FarcasterSearch() {
           <Button
             variant="outline"
             onClick={() => {
-              setQuery("")
-              setDateRange({})
-              setAuthorFid("")
-              setViewerFid("")
-              setChannelId("")
-              setParentUrl("")
-              setMode("literal")
-              setSortType("desc_chron")
-              setLimit("25")
-              setPriorityMode(false)
+              setQuery("");
+              setDateRange({});
+              setAuthorFid("");
+              setViewerFid("");
+              setChannelId("");
+              setParentUrl("");
+              setMode("literal");
+              setSortType("desc_chron");
+              setLimit("25");
+              setPriorityMode(false);
             }}
           >
             Reset
@@ -338,10 +385,13 @@ export function FarcasterSearch() {
         </CardFooter>
       </Card>
 
-      {error && <div className="mt-4 p-4 bg-destructive/10 text-destructive rounded-md">{error}</div>}
+      {error && (
+        <div className="mt-4 p-4 bg-destructive/10 text-destructive rounded-md">
+          {error}
+        </div>
+      )}
 
       {results && <CastResults results={results} />}
     </div>
-  )
+  );
 }
-
