@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { CastResults } from "@/components/cast-results";
+import { CastResults, FarcasterCastSearch } from "@/components/cast-results";
 
 export function FarcasterSearch() {
   const [query, setQuery] = useState<string>("");
@@ -45,7 +45,7 @@ export function FarcasterSearch() {
     {}
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<FarcasterCastSearch | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSearch = async () => {
